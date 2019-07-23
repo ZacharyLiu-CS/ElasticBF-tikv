@@ -78,6 +78,8 @@ enum Tickers : uint32_t {
   // exist.
   BLOOM_FILTER_FULL_TRUE_POSITIVE,
 
+  //added by ElasticBF
+  REAL_IOS,
   // # persistent cache hit
   PERSISTENT_CACHE_HIT,
   // # persistent cache miss

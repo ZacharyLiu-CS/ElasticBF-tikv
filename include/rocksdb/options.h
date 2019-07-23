@@ -293,7 +293,8 @@ struct ColumnFamilyOptions : public AdvancedColumnFamilyOptions {
   // If left empty, db_paths will be used.
   // Default: empty
   std::vector<DbPath> cf_paths;
-
+  //added by ElasticBF
+  bool force_disable_compaction = false;
   // Create ColumnFamilyOptions with default values for all fields
   ColumnFamilyOptions();
   // Create ColumnFamilyOptions from Options

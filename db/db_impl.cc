@@ -94,7 +94,7 @@
 #include "util/stop_watch.h"
 #include "util/string_util.h"
 #include "util/sync_point.h"
-
+#include <iostream>
 namespace rocksdb {
 const std::string kDefaultColumnFamilyName("default");
 void DumpRocksDBBuildVersion(Logger* log);
@@ -228,11 +228,15 @@ DBImpl::DBImpl(const DBOptions& options, const std::string& dbname,
 
   // Reserve ten files or so for other uses and give the rest to TableCache.
   // Give a large number for setting of "infinite" open files.
-  const int table_cache_size = (mutable_db_options_.max_open_files == -1)
-                                   ? TableCache::kInfiniteCapacity
-                                   : mutable_db_options_.max_open_files - 10;
-  table_cache_ = NewLRUCache(table_cache_size,
-                             immutable_db_options_.table_cache_numshardbits);
+  // const int table_cache_size = (mutable_db_options_.max_open_files == -1)
+  //                                  ? TableCache::kInfiniteCapacity
+  //                                  : mutable_db_options_.max_open_files - 10;
+  // table_cache_ = NewLRUCache(table_cache_size,
+  //                            immutable_db_options_.table_cache_numshardbits);
+  //added by ElasticBF
+  printf("set rocksdb's max_open_files: 100000, numshardbits: 2\n");
+  const int table_cache_size = 100000;
+  table_cache_ = NewLRUCache(table_cache_size, 1);
 
   versions_.reset(new VersionSet(dbname_, &immutable_db_options_, env_options_,
                                  table_cache_.get(), write_buffer_manager_,
@@ -585,6 +589,11 @@ Status DBImpl::CloseHelper() {
 Status DBImpl::CloseImpl() { return CloseHelper(); }
 
 DBImpl::~DBImpl() {
+  //added by ElasticBF
+  std::string stats_str;
+  this->GetProperty(DefaultColumnFamily(), "rocksdb.stats", &stats_str);
+  std::cerr << stats_str << std::endl;
+
   if (!closed_) {
     closed_ = true;
     CloseHelper();
@@ -2025,6 +2034,10 @@ bool DBImpl::GetProperty(ColumnFamilyHandle* column_family,
   const DBPropertyInfo* property_info = GetPropertyInfo(property);
   value->clear();
   auto cfd = reinterpret_cast<ColumnFamilyHandleImpl*>(column_family)->cfd();
+  //added by ElasticBF
+  value->append("\n\n");
+  value->append(initial_db_options_.statistics.get()->ToString());
+  
   if (property_info == nullptr) {
     return false;
   } else if (property_info->handle_int) {

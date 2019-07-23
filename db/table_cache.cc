@@ -13,6 +13,7 @@
 #include "db/range_tombstone_fragmenter.h"
 #include "db/version_edit.h"
 #include "util/filename.h"
+#include <iostream>
 
 #include "monitoring/perf_context_imp.h"
 #include "rocksdb/statistics.h"
@@ -25,6 +26,7 @@
 #include "util/file_reader_writer.h"
 #include "util/stop_watch.h"
 #include "util/sync_point.h"
+#include "util/hash.h"
 
 namespace rocksdb {
 
@@ -156,7 +158,18 @@ Status TableCache::FindTable(const EnvOptions& env_options,
                            const_cast<bool*>(&no_io));
 
   if (*handle == nullptr) {
+    //added by ElasticBF
+    uint32_t hash = Hash((const char*)&number, sizeof(number), 0) % 64;
+    mutex_[hash].Lock();
+
+    *handle = cache_->Lookup(key);
+    if (*handle != NULL) {
+      mutex_[hash].Unlock();
+      return s;
+    }
     if (no_io) {  // Don't do IO and return a not-found status
+      //added by ElasticBF
+      mutex_[hash].Unlock();
       return Status::Incomplete("Table not found in table_cache, no_io is set");
     }
     std::unique_ptr<TableReader> table_reader;
@@ -178,6 +191,8 @@ Status TableCache::FindTable(const EnvOptions& env_options,
         table_reader.release();
       }
     }
+      //added by ElasticBF
+    mutex_[hash].Unlock();
   }
   return s;
 }
@@ -472,5 +487,9 @@ size_t TableCache::GetMemoryUsageByTableReader(
 void TableCache::Evict(Cache* cache, uint64_t file_number) {
   cache->Erase(GetSliceForFileNumber(&file_number));
 }
-
+//added by ElasticBF
+void TableCache::addCurrentTime() {
+  BlockBasedTableOptions* bOptions = reinterpret_cast<BlockBasedTableOptions*> (ioptions_.table_factory->GetOptions());
+  bOptions->filter_info_cache->addCurrentTime();
+}
 }  // namespace rocksdb

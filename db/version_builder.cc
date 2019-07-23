@@ -313,7 +313,27 @@ class VersionBuilder::Rep {
       }
     }
   }
-
+  //added by ElasticBF
+  void DeleteLevel0File() {
+      if (levels_[0].added_files.size() > 3) {
+        while (levels_[0].added_files.size() > 3) {
+          auto iter = levels_[0].added_files.begin();
+          auto iter2 = iter;
+          uint64_t big = 0;
+          for (; iter != levels_[0].added_files.end(); iter++){
+            auto& pair = *iter;
+            if (big < pair.first) {
+              iter2 = iter;
+              big = pair.first;
+            }
+          }
+          auto& pair = *iter2;
+          levels_[0].deleted_files.insert(pair.first);
+          printf("delete file %lu, size %lu\n", pair.first, pair.second->fd.GetFileSize());
+          levels_[0].added_files.erase(iter2);
+        }
+      }
+  }
   // Save the current state in *v.
   void SaveTo(VersionStorageInfo* vstorage) {
     CheckConsistency(base_vstorage_);

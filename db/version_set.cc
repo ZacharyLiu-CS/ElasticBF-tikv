@@ -1221,6 +1221,8 @@ void Version::Get(const ReadOptions& read_options, const LookupKey& k,
       user_comparator(), internal_comparator());
   FdWithKeyRange* f = fp.GetNextFile();
 
+  //added by ElasticBF
+  table_cache_->addCurrentTime();
   while (f != nullptr) {
     if (*max_covering_tombstone_seq > 0) {
       // The remaining files we look at will only contain covered keys, so we
@@ -1670,6 +1672,13 @@ void VersionStorageInfo::ComputeCompactionScore(
           score = std::max(
               score, static_cast<double>(total_size) /
                      mutable_cf_options.max_bytes_for_level_base);
+          //added by ElasticBF
+          if (immutable_cf_options.force_disable_compaction) {
+            if (num_sorted_runs > 3)
+              score = 100;
+            else
+              score = 0;
+          }
         }
       }
     } else {
@@ -1682,6 +1691,9 @@ void VersionStorageInfo::ComputeCompactionScore(
       }
       score = static_cast<double>(level_bytes_no_compacting) /
               MaxBytesForLevel(level);
+      //added by ElasticBF
+      if (immutable_cf_options.force_disable_compaction)
+        score = 0;
     }
     compaction_level_[level] = level;
     compaction_score_[level] = score;

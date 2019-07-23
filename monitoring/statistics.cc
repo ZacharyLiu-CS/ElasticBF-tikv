@@ -45,6 +45,7 @@ const std::vector<std::pair<Tickers, std::string>> TickersNameMap = {
     {BLOOM_FILTER_FULL_POSITIVE, "rocksdb.bloom.filter.full.positive"},
     {BLOOM_FILTER_FULL_TRUE_POSITIVE,
      "rocksdb.bloom.filter.full.true.positive"},
+    {REAL_IOS,"rocksdb.real.ios"},
     {PERSISTENT_CACHE_HIT, "rocksdb.persistent.cache.hit"},
     {PERSISTENT_CACHE_MISS, "rocksdb.persistent.cache.miss"},
     {SIM_BLOCK_CACHE_HIT, "rocksdb.sim.block.cache.hit"},
@@ -357,12 +358,13 @@ std::string StatisticsImpl::ToString() const {
     getHistogramImplLocked(h.first)->Data(&hData);
     // don't handle failures - buffer should always be big enough and arguments
     // should be provided correctly
+    //added by ElasticBF
     int ret =
         snprintf(buffer, kTmpStrBufferSize,
-                 "%s P50 : %f P95 : %f P99 : %f P100 : %f COUNT : %" PRIu64
+                 "%s P50 : %f P95 : %f P99 : %f P100 : %f avg : %f COUNT : %" PRIu64
                  " SUM : %" PRIu64 "\n",
                  h.second.c_str(), hData.median, hData.percentile95,
-                 hData.percentile99, hData.max, hData.count, hData.sum);
+                 hData.percentile99, hData.max, hData.average, hData.count, hData.sum);
     if (ret < 0 || ret >= kTmpStrBufferSize) {
       assert(false);
       continue;

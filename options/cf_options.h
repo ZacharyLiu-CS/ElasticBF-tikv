@@ -121,6 +121,9 @@ struct ImmutableCFOptions {
   const SliceTransform* memtable_insert_with_hint_prefix_extractor;
 
   std::vector<DbPath> cf_paths;
+
+  //added by ElasticBF
+  bool force_disable_compaction;
 };
 
 struct MutableCFOptions {

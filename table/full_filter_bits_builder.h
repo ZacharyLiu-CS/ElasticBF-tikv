@@ -43,12 +43,23 @@ class FullFilterBitsBuilder : public FilterBitsBuilder {
   // +----------------------------------------------------------------+
   virtual Slice Finish(std::unique_ptr<const char[]>* buf) override;
 
+  // added by ElasticBF
+  virtual Slice Finish(std::unique_ptr<const char[]>* buf, int id) {
+    buf->reset();
+    fprintf(stderr, "error call FullFilterBitsBuilder::Finish(buf,id), %d\n", id);
+    exit(1);
+    return Slice();
+  }
+
   // Calculate num of entries fit into a space.
   virtual int CalculateNumEntry(const uint32_t space) override;
 
   // Calculate space for new filter. This is reverse of CalculateNumEntry.
   uint32_t CalculateSpace(const int num_entry, uint32_t* total_bits,
                           uint32_t* num_lines);
+
+  // added by ElasticBF
+  int id_;
 
  private:
   friend class FullFilterBlockTest_DuplicateEntries_Test;
@@ -69,6 +80,39 @@ class FullFilterBitsBuilder : public FilterBitsBuilder {
   // No Copy allowed
   FullFilterBitsBuilder(const FullFilterBitsBuilder&);
   void operator=(const FullFilterBitsBuilder&);
+};
+ 
+// added by ElasticBF
+class MultiFullFilterBitsBuilder : public FullFilterBitsBuilder {
+ public:
+  explicit MultiFullFilterBitsBuilder(const std::vector<int> &bits_per_keys,
+                                 const size_t num_probe);
+
+  ~MultiFullFilterBitsBuilder();
+
+  virtual void AddKey(const Slice& key) override;
+
+  virtual Slice Finish(std::unique_ptr<const char[]>* buf) {
+    buf->reset();
+    fprintf(stderr, "error call MultiFullFilterBitsBuilder::Finish(buf)\n");
+    exit(1);
+    return Slice();
+  }
+
+  virtual Slice Finish(std::unique_ptr<const char[]>* buf, int id);
+
+ private:
+  friend class FullFilterBlockTest_DuplicateEntries_Test;
+  // std::vector<int> bits_per_keys_;
+  std::vector<FullFilterBitsBuilder*> fullFilterBitsBuilders;
+
+
+  // Assuming single threaded access to this function.
+  void AddHash(uint32_t h, char* data, uint32_t num_lines, uint32_t total_bits);
+
+  // No Copy allowed
+  MultiFullFilterBitsBuilder(const MultiFullFilterBitsBuilder&);
+  void operator=(const MultiFullFilterBitsBuilder&);
 };
 
 }  // namespace rocksdb

@@ -2,6 +2,7 @@
 LIB_SOURCES =                                                   \
   cache/clock_cache.cc                                          \
   cache/lru_cache.cc                                            \
+  cache/multi_queue.cc                                        \
   cache/sharded_cache.cc                                        \
   db/builder.cc                                                 \
   db/c.cc                                                       \
