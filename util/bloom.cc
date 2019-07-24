@@ -395,7 +395,9 @@ class BloomFilterPolicy : public FilterPolicy {
       return nullptr;
     }
 
-    return new FullFilterBitsBuilder(bits_per_key_, num_probes_);
+ 
+    // replace FullFilterBitsBuilder with MultiFullFilterBitsBuilder
+    return new MultiFullFilterBitsBuilder(bits_per_keys_, num_probes_);
   }
 
   virtual FilterBitsReader* GetFilterBitsReader(const Slice& contents)
